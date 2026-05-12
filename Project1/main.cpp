@@ -100,12 +100,13 @@ int main()
 
     Shader ourShader("vertex.glsl", "frag.glsl");
 
-    Model ourModel("lab3.obj");
+    Model ourModel("./lab3.obj");
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(myWindow))
     {
         processInput(myWindow);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 		float currentFrame = glfwGetTime();
@@ -116,18 +117,38 @@ int main()
 
 		glm::mat4 model = glm::mat4(1.0f); 
 		glm::mat4 transform = glm::mat4(1.0f);
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
+        ourShader.setMat3("normalMatrix", normalMatrix);
 
         ourShader.Use();
+
 
         ourShader.setMat4("view", view);
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("model", model);
         ourShader.setMat4("transform", transform);
 
-        float timeValue = glfwGetTime();
-        float green = (sin(timeValue) / 2.0f) + 0.5f;
+        glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+        glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
-        ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+        glm::vec3 ambientLight = lightColor * 0.1f;
+        glm::vec3 diffuseLight = lightColor * 0.8f;
+        glm::vec3 specularLight = lightColor * 1.0f;
+
+        ourShader.setVec3("light.position", lightPos.x, lightPos.y, lightPos.z);
+        ourShader.setVec3("light.ambient", ambientLight.x, ambientLight.y, ambientLight.z);
+        ourShader.setVec3("light.diffuse", diffuseLight.x, diffuseLight.y, diffuseLight.z);
+        ourShader.setVec3("light.specular", specularLight.x, specularLight.y, specularLight.z);
+
+        ourShader.setVec3("mat.ambient", 1.0f, 0.5f, 0.5f);
+        ourShader.setVec3("mat.diffuse", 1.0f, 0.5f, 0.5f);
+        ourShader.setVec3("mat.specular", 0.5f, 0.5f, 0.5f);
+        ourShader.setFloat("mat.shininess", 32.0f);
+
+        ourShader.setVec3("ViewPos", cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+        ourModel.Draw();
 
         ourModel.Draw();
 
